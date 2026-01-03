@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  app:
+    container_name: ayam_jago_app
+    build: .
+    ports:
+      - "3000:3000"
+    
+    # KUNCI RAHASIA: 
+    # Docker akan membaca isi file .env di laptop kamu
+    # Pastikan file .env sudah berisi DATABASE_URL dari Neon
+    env_file:
+      - .env
+      
+    # Opsional: Agar kalau kamu edit kodingan, server restart sendiri
+    volumes:
+      - .:/app
+      - /app/node_modules

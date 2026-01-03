@@ -1,0 +1,9 @@
+# Mengabaikan folder library yang berat
+node_modules/
+
+# Mengabaikan file rahasia (SANGAT PENTING)
+.env
+
+# Mengabaikan file log error
+npm-debug.log
+.DS_Store
