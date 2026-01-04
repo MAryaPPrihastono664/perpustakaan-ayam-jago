@@ -142,10 +142,72 @@ app.delete('/api/unregister', authenticateToken, async (req, res) => {
 });
 
 
+// GET BOOKS (Pagination + Search + Exact Mode)
+// Cara Pakai:
+// 1. Partial: /api/books?page=1&search=ayam (Default)
+// 2. Exact:   /api/books?page=1&search=ayam&exact=true
 app.get('/api/books', async (req, res) => {
+    // 1. Ambil Parameter
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = 5;
+    const offset = (page - 1) * limit;
+    
+    const search = req.query.search || ""; 
+    const isExact = req.query.exact === 'true'; // Cek apakah mode Exact aktif?
+
     try {
-        const result = await pool.query('SELECT * FROM books WHERE stock > 0');
-        res.json(result.rows);
+        // Gunakan WHERE 1=1 agar fleksibel.
+        // Trik: Jika sedang Search, kita tidak peduli stock. Jika tidak search, baru cek stock > 0.
+        let query = 'SELECT * FROM books WHERE 1=1'; 
+        let queryParams = [];
+        
+        // 2. LOGIKA PENCARIAN
+        if (search) {
+            // Tambahkan filter search ke Query
+            // Kita pakai ILIKE agar huruf besar/kecil tidak masalah (Case Insensitive)
+            query += ` AND (title ILIKE $1 OR author ILIKE $1)`;
+            
+            if (isExact) {
+                // MODE EXACT: Tidak pakai tanda persen (%)
+                // Judul harus "Ayam Goreng", tidak boleh "Ayam Goreng Enak"
+                queryParams.push(search); 
+            } else {
+                // MODE PARTIAL: Pakai tanda persen (%)
+                // Judul "Ayam" bisa ketemu "Sate Ayam"
+                queryParams.push(`%${search}%`); 
+            }
+        } else {
+            // Jika TIDAK mencari (List biasa), hanya tampilkan yang stoknya ada
+            query += ` AND stock > 0`;
+        }
+
+        // Tambahkan Sorting Biar Rapi (A-Z)
+        query += ` ORDER BY title ASC`;
+
+        // 3. LOGIKA PAGINATION
+        // Hitung urutan parameter ($1, $2, dst) secara dinamis
+        const limitParamIndex = queryParams.length + 1;
+        const offsetParamIndex = queryParams.length + 2;
+
+        query += ` LIMIT $${limitParamIndex} OFFSET $${offsetParamIndex}`;
+        
+        // Masukkan angka limit dan offset ke array params
+        queryParams.push(limit, offset);
+
+        // 4. Jalankan Query
+        const result = await pool.query(query, queryParams);
+
+        res.json({
+            status: "success",
+            mode: search ? (isExact ? "search_exact" : "search_partial") : "list_all",
+            page: page,
+            limit: limit,
+            total_found: result.rows.length,
+            search_keyword: search,
+            is_exact_match: isExact,
+            data: result.rows
+        });
+
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -193,10 +255,25 @@ app.post('/api/return', authenticateToken, async (req, res) => {
     }
 });
 
+// GET HISTORY (Dengan Pagination)
+// Cara pakai: /api/borrows?page=1
 app.get('/api/borrows', authenticateToken, async (req, res) => {
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = 5;
+    const offset = (page - 1) * limit;
+
     try {
-        const result = await pool.query('SELECT * FROM borrows ORDER BY borrow_date DESC');
-        res.json(result.rows);
+        const result = await pool.query(
+            'SELECT * FROM borrows ORDER BY borrow_date DESC LIMIT $1 OFFSET $2',
+            [limit, offset]
+        );
+
+        res.json({
+            status: "success",
+            page: page,
+            limit: limit,
+            data: result.rows
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

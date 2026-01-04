@@ -5,7 +5,7 @@ services:
     container_name: ayam_jago_app
     build: .
     ports:
-      - "3000:3000"
+      - "3068:3000"
     
     # KUNCI RAHASIA: 
     # Docker akan membaca isi file .env di laptop kamu

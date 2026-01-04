@@ -3,6 +3,7 @@ node_modules/
 
 # Mengabaikan file rahasia (SANGAT PENTING)
 .env
+goodreads_library_export.csv
 
 # Mengabaikan file log error
 npm-debug.log
