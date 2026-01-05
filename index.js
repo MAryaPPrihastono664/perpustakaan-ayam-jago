@@ -1,11 +1,14 @@
 require('dotenv').config();
 const express = require('express');
+const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const { Pool } = require('pg');
 const bcrypt = require('bcryptjs'); // 1. Tambahkan ini
 
 const app = express();
 const port = 3000;
+
+app.use(cors());
 
 app.use(express.json());
 
