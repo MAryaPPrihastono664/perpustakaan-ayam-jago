@@ -2,6 +2,8 @@
 
 Backend RESTful API untuk sistem manajemen perpustakaan sederhana. Dibangun menggunakan **Node.js**, **Express**, dan **PostgreSQL**. Aplikasi ini dirancang dengan fokus pada keamanan data (JWT & Bcrypt), efisiensi memori, dan integritas data menggunakan Database Transactions.
 
+Link Deploy Backend : [https://arya.theokaitou.my.id/](https://arya.theokaitou.my.id/)
+
 ## Fitur Utama
 
 * **Autentikasi Aman:** Registrasi & Login menggunakan JWT (JSON Web Token) dan hashing password (Bcrypt).
